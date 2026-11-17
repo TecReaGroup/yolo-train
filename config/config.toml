@@ -12,9 +12,9 @@ seed = 42
 
 [camera]
 # Non-negative camera index: 0, 1, 2, ...
-index = 0
-# Project-relative or absolute .pt path; the default downloads pretrained YOLOv8n if missing.
-model = "temp/model/yolov8n.pt"
+index = 1
+# Project-relative or absolute path to trained .pt weights.
+model = "data/input/laptop_cover_screwdriver/train/weights/best.pt"
 imgsz = 640
 # Confidence threshold in [0, 1].
 confidence = 0.25

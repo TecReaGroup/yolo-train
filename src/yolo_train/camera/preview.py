@@ -10,7 +10,8 @@ from yolo_train.config import CONFIG_PATH, PROJECT_DIRECTORY
 
 LOGGER = logging.getLogger("camera")
 TEMP_DIRECTORY = PROJECT_DIRECTORY / "temp"
-DEFAULT_MODEL_PATH = TEMP_DIRECTORY / "model" / "yolov8n.pt"
+CAMERA_WIDTH = 1280
+CAMERA_HEIGHT = 720
 WINDOW_TITLE = "YOLO Camera - Q / Esc to quit"
 
 
@@ -29,12 +30,12 @@ def run_camera() -> None:
     model_path = (PROJECT_DIRECTORY / Path(camera["model"])).resolve()
     if model_path.suffix.lower() != ".pt":
         raise ValueError("camera.model must be a .pt path")
-    if not model_path.is_file() and model_path != DEFAULT_MODEL_PATH:
+    if not model_path.is_file():
         raise FileNotFoundError(f"模型文件不存在: {model_path}")
 
     runtime_directory = TEMP_DIRECTORY / "runtime"
     config_directory = TEMP_DIRECTORY / "config"
-    for directory in (runtime_directory, config_directory, model_path.parent):
+    for directory in (runtime_directory, config_directory):
         directory.mkdir(parents=True, exist_ok=True)
     os.environ["YOLO_CONFIG_DIR"] = str(config_directory)
     os.environ["TORCH_HOME"] = str(TEMP_DIRECTORY / "torch")
@@ -65,7 +66,18 @@ def preview_camera(model_path: Path, index: int, imgsz: int, confidence: float) 
     try:
         if not capture.isOpened():
             raise RuntimeError(f"无法打开摄像头 {index}，请检查设备编号、权限或占用情况")
+        capture.set(cv2.CAP_PROP_FRAME_WIDTH, CAMERA_WIDTH)
+        capture.set(cv2.CAP_PROP_FRAME_HEIGHT, CAMERA_HEIGHT)
+        actual_width = int(capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+        actual_height = int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        LOGGER.info("摄像头采集分辨率=%dx%d", actual_width, actual_height)
+        if (actual_width, actual_height) != (CAMERA_WIDTH, CAMERA_HEIGHT):
+            LOGGER.warning(
+                "摄像头未采用请求的 %dx%d，实际采集=%dx%d",
+                CAMERA_WIDTH, CAMERA_HEIGHT, actual_width, actual_height,
+            )
         cv2.namedWindow(WINDOW_TITLE, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(WINDOW_TITLE, CAMERA_WIDTH, CAMERA_HEIGHT)
         LOGGER.info("实时预览已启动，按 Q、Esc 或关闭窗口退出")
         while True:
             captured, frame = capture.read()
