@@ -1,13 +1,15 @@
 UV ?= uv
-TORCH_INDEX_URL ?= https://download.pytorch.org/whl/cu128
 
-.PHONY: install run yolov8n
+.PHONY: install train app camera
 
 install:
-	$(UV) sync
-	$(UV) pip install --upgrade --reinstall-package torch --reinstall-package torchvision torch torchvision --index-url $(TORCH_INDEX_URL)
+	$(UV) sync --locked
 
-run: yolov8n
+train:
+	$(UV) run --no-sync python -m yolo_train train
 
-yolov8n:
-	$(UV) run --no-sync python -m yolo_train yolov8n
+app:
+	$(UV) run --no-sync python -m yolo_train app
+
+camera:
+	$(UV) run --no-sync python -m yolo_train camera
